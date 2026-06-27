@@ -1,7 +1,8 @@
-
+//Bibliotecas
 #include <stdio.h>
 #include <stdlib.h>
-//definições de tamanhos
+
+//Valores definidos
 #define max_x 23
 #define max_y 13
 #define num_max_aliens 5
@@ -15,8 +16,11 @@
 #define largura_nave 3
 #define altura_nave 2
 #define largura_aliens 3
+#define altura_aliens 3
 #define QTD_Vidas_inimigas 2
-//eu acho que stream se aplica em alguma parte do codigo quanto aos arquivos, preciso avaliar melhor
+
+//Complexos ou structs
+//Estao separados em tres porque um unico complexo ficaria desorganizado mas todos tem relacao com tJogo
 typedef struct{
     int X_nave;
     int X_aliens;
@@ -32,8 +36,8 @@ typedef struct{
 
 typedef struct{
     char nave_jogador[altura_nave][largura_nave];
-    char nave_inimiga_1[altura_nave][largura_nave];
-    char nave_inimiga_2[altura_nave][largura_nave];
+    char nave_inimiga_1[altura_aliens][largura_aliens];
+    char nave_inimiga_2[altura_aliens][largura_aliens];
     char tiro_inimigo;
     char tiro_jogador;
 } tPersonagens;
@@ -59,9 +63,9 @@ typedef struct{
 } tJogo;
 
 
-//FUNCOES
+//FUNCOES 
 //FUNCOES BASICAS OU INICIAIS
-void ProcuraDiretorio(int argc, char *argv[]);
+void ProcuraDiretorio(int argc, char *argv[], FILE * pSaida);
 tJogo LeArquivosEGeraPrimeiroMapa(int argc, char *argv[], tJogo jogo, FILE * pSaida);
 tJogo InicializaPrimeiraVersaoDaArena(FILE * pPersonagens,FILE * pConfig, FILE * pSaida, tJogo jogo);
 tJogo PegaInformacoesDasConfiguracoes(FILE * pConfig, tJogo jogo);
@@ -80,43 +84,45 @@ tJogo LimpaArena(tJogo jogo);
 //FUNCOES QUE TRATAM ESPECIFICAMENTE OS TIRO DO JOGADOR E AS CONSEQUENCIAS DE CADA UM
 tJogo MoveTirosJogador(tJogo jogo);
 int VerificaSeTiroVaiAtingirUmInimigo(tJogo jogo);
-int VerificaSeTiroVaiAtingirOutroTiro(tJogo jogo); //PRECISO MELHORAR ESSA COM URGENCIA
+int VerificaSeTiroVaiAtingirOutroTiro(tJogo jogo); //PRECISO VER NOS CASOS O QUE ACONTECE EXATAMENTE    
 tJogo RegistraQualInimigoFoiAtingido(tJogo jogo);
 tJogo EliminaInimigosMortos(tJogo jogo);
 int JogadorMorreu(tJogo jogo);
 int JogadorGanhou(tJogo jogo);
-//FUNCOES QUE TRATAM ESPECIFICAMENTE DOS TIROS INIMIGOS E AS CONSEQUENCIAS DE CADA UM; TA FALTANDO UM MONTE DE COISA PRA FUNCIONAR
+//FUNCOES QUE TRATAM ESPECIFICAMENTE DOS TIROS INIMIGOS E AS CONSEQUENCIAS DE CADA UM
 tJogo MoveTirosInimigos(tJogo jogo);
 tJogo DizCoordenadaDoTiroInimigo(tJogo jogo);
 int VerificaSeTiroVaiAtingirNave(tJogo jogo);
 tJogo EliminaJogador(tJogo jogo);
 //FUNCOES DE IMPRESSAO
 void PrintaArenaEhPlacar(FILE* pSaida, tJogo jogo);
-//A Implementar ainda
+//Falta Implementar ainda
 void PrintaMapaDeCalor(FILE* pSaida, FILE* pSaida_Mapa, tJogo jogo);
 
-void ProcuraDiretorio(int argc, char *argv[]){
-    //Informa erro se o usuario nao digitar um diretorio
+//Funcao a Funcao
+void ProcuraDiretorio(int argc, char *argv[], FILE * pSaida){
+    //Informa erro se o usuario nao digitar um diretorio com base no tamanho do argumento passado pra main
     if(argc<=1){
-        printf("ERRO: Informe o diretorio com os arquivos de jogo.");
+        fprintf(pSaida,"ERRO: Informe o diretorio com os arquivos de jogo.\n");
         exit(0);
     }
 }
 
 tJogo LeArquivosEGeraPrimeiroMapa(int argc, char *argv[], tJogo jogo, FILE * pSaida){
-    //Abre os arquivos, verificando se eles existem e caso nao, escreve no arquivo de saidade que houve erro
+    //eu acho que stream se aplica em alguma parte mas to em duvida
+    //Abre os arquivos de configuaracao e personagens e verifica se eles existem e caso nao escreve no arquivo de saida que houve erro ao tentar ler
+
     FILE * pPersonagens;
     pPersonagens = fopen("personagens.txt", "r");
+
     if(!pPersonagens){
         fprintf(pSaida,"Erro ao tentar ler personagens.txt, caminho do diretorio: %s", argv[1]);
         exit(0);
     }
 
-    //Abre os arquivos, verificando se eles existem e caso nao, escreve no arquivo de saidade que houve erro
     FILE * pConfig;
     pConfig = fopen("config_inicial.txt", "r");
 
-    //eu posso colocar um if pra verificar se o arquivo de saida existe também, mas o enunciado pede pra considerar que ele sempre existe, perguntar ao thiago
     if(!pConfig){
         fprintf(pSaida, "Erro ao tentar ler config_inicial.txt, caminho do diretorio: %s", argv[1]);
         exit(0);
@@ -126,8 +132,8 @@ tJogo LeArquivosEGeraPrimeiroMapa(int argc, char *argv[], tJogo jogo, FILE * pSa
 }
 
 tJogo InicializaPrimeiraVersaoDaArena(FILE * pPersonagens,FILE * pConfig, FILE * pSaida, tJogo jogo ){
-    int i=0, j=0;
-    //COLOCANDO VALORES INICIAIS DAS VARIAVEIS QUE VOU USAR DURANTE O JOGO
+    int linha=0, coluna=0;
+    //Aproveito que essa funcao so roda uma vez para inicializar os valores da struct jogo com os valores que tem que ter inicialmente e resolver o problema de terem lixo da memoria nelas
     jogo.pontos=0;
     jogo.iteracoes=0;
     jogo.coordenada.X_nave= X_inicial_Nave;
@@ -137,23 +143,22 @@ tJogo InicializaPrimeiraVersaoDaArena(FILE * pPersonagens,FILE * pConfig, FILE *
     jogo.tiro_jogador_existe = 0;
     jogo.tiro_inimigo_1_existe=0;
     jogo.tiro_inimigo_2_existe=0;
-    //FUNCOES INICIAIS
+    for(linha=0; linha<num_fileiras_alienigenas; linha++){
+        for(coluna=0; coluna<num_max_aliens; coluna++){ //considerei o num_max_aliens com base no que eu acho que cabe na arena, mas se ele aumentar eu preciso trocar
+            jogo.inimigos[linha][coluna]= QTD_Vidas_inimigas;
+        }
+    }
+    //As seguintes funcoes sao responsaveis por pegar informacoes dos arquivos, preencher e inicializar a primeira versao da arena
     jogo = PegaInformacoesDosPersonagens(pPersonagens, jogo);
     jogo = PegaInformacoesDasConfiguracoes(pConfig, jogo);
     jogo = InicializaLimitesDaArena(pSaida, jogo);
     jogo = ColocaAliensNaArena(jogo);
     jogo = PreencheComNaveJogador(jogo);
-    //INICIALIZA A MATRIZ INIMIGOS COM A QTD DE VIDAS QUE ELES TEM NO COMECO E TODOS VIVOS
-    for(i=0; i<num_fileiras_alienigenas; i++){
-        for(j=0; j<jogo.num_aliens; j++){
-            jogo.inimigos[i][j]= QTD_Vidas_inimigas;
-        }
-    }
-    //PRINTA A ARENA INICIAL
+    //essa funcao printa a arena inicial no arquivo de saida
     PrintaArenaEhPlacar(pSaida,jogo);
     return jogo;
 }
-
+//Ate aqui ta bem modularizado
 tJogo PegaInformacoesDosPersonagens(FILE * pPersonagens,  tJogo jogo){
     //PREENCHE AS VARIAVEIS RELATIVAS AOS PERSONAGENS
     int i=0, j=0;
@@ -169,15 +174,15 @@ tJogo PegaInformacoesDosPersonagens(FILE * pPersonagens,  tJogo jogo){
     //TIRO INIMIGO
     fscanf(pPersonagens, "%c\n", &jogo.personagem.tiro_inimigo);
     //PRIMEIRO TIPO DE ALIEN OU INIMIGO
-    for(i=0; i<altura_nave; i++){
-        for(j=0; j<largura_nave; j++){
+    for(i=0; i<altura_aliens; i++){
+        for(j=0; j<largura_aliens; j++){
             fscanf(pPersonagens,"%c", &jogo.personagem.nave_inimiga_1[i][j]);
         }
         fscanf(pPersonagens,"\n");
     }
     //SEGUNDO TIPO DE ALIEN OU INIMIGO
-    for(i=0; i<altura_nave; i++){
-        for(j=0; j<largura_nave; j++){
+    for(i=0; i<altura_aliens; i++){
+        for(j=0; j<largura_aliens; j++){
             fscanf(pPersonagens,"%c", &jogo.personagem.nave_inimiga_2[i][j]);
         }
         fscanf(pPersonagens,"\n");
@@ -218,8 +223,8 @@ tJogo PreenchePrimeiraFileiraDeAliens(int tipo_alien, tJogo jogo){
     int i=0, j=0, inicio_inimigo= 0, alien=0;
     if(tipo_alien ==1){
         for(alien=0; alien<jogo.num_aliens; alien++){
-            for(i=0; i<2; i++){
-                for(j=0; j<3; j++){
+            for(i=0; i<altura_aliens; i++){
+                for(j=0; j<largura_aliens; j++){
                     jogo.arena[Y_primeira_fileira_inimigos+i][jogo.coordenada.X_aliens+inicio_inimigo+j]= jogo.personagem.nave_inimiga_1[i][j];
                 }
             }
@@ -227,8 +232,8 @@ tJogo PreenchePrimeiraFileiraDeAliens(int tipo_alien, tJogo jogo){
         }
     }else{
         for(alien=0; alien<jogo.num_aliens; alien++){
-            for(i=0; i<2; i++){
-                for(j=0; j<3; j++){
+            for(i=0; i<altura_aliens; i++){
+                for(j=0; j<largura_aliens; j++){
                     jogo.arena[Y_primeira_fileira_inimigos+i][jogo.coordenada.X_aliens+inicio_inimigo+j]= jogo.personagem.nave_inimiga_2[i][j];
                 }
             }
@@ -242,8 +247,8 @@ tJogo PreencheSegundaFileiraDeAliens(int tipo_alien, tJogo jogo){
     int i=0, j=0, inicio_inimigo= 0, alien=0;
     if(tipo_alien ==1){
         for(alien=0; alien<jogo.num_aliens; alien++){
-            for(i=0; i<2; i++){
-                for(j=0; j<3; j++){
+            for(i=0; i<altura_aliens; i++){
+                for(j=0; j<largura_aliens; j++){
                     jogo.arena[Y_segunda_fileira_inimigos+i][jogo.coordenada.X_aliens+inicio_inimigo+j]= jogo.personagem.nave_inimiga_1[i][j];
                 }
             }
@@ -251,8 +256,8 @@ tJogo PreencheSegundaFileiraDeAliens(int tipo_alien, tJogo jogo){
         }
     }else{
         for(alien=0; alien<jogo.num_aliens; alien++){
-            for(i=0; i<2; i++){
-                for(j=0; j<3; j++){
+            for(i=0; i<altura_aliens; i++){
+                for(j=0; j<largura_aliens; j++){
                     jogo.arena[Y_segunda_fileira_inimigos+i][jogo.coordenada.X_aliens+inicio_inimigo+j]= jogo.personagem.nave_inimiga_2[i][j];
                 }
             }
@@ -264,8 +269,8 @@ return jogo;
 
 tJogo PreencheComNaveJogador(tJogo jogo){
     int i=0, j=0;
-        for(i=0; i<2; i++){
-            for(j=0; j<3; j++){
+        for(i=0; i<altura_nave; i++){
+            for(j=0; j<largura_nave; j++){
                 jogo.arena[Y_inicial_Nave+i][jogo.coordenada.X_nave+j] = jogo.personagem.nave_jogador[i][j];
             }
         }
@@ -340,18 +345,19 @@ tJogo RealizaJogo(tJogo jogo, FILE * pSaida){
 
 tJogo LeJogada(tJogo jogo){
     if(scanf("%c", &jogo.jogada)==1){
-    if(jogo.jogada == '\n'){
-        if(scanf("%c", &jogo.jogada)!=1){
-            printf("acabaram as jogadas\n");
+        if(jogo.jogada == '\n'){
+            if(scanf("%c", &jogo.jogada)!=1){
+                printf("acabaram as jogadas\n");
+            }
         }
+    }else{
+        printf("acabaram as jogadas\n");
+        exit(0);
     }
-}else{
-    printf("acabaram as jogadas\n");
-    exit(0);
+        //printf("%c\n", jogo.jogada);
+        return jogo;
 }
-    //printf("%c\n", jogo.jogada);
-    return jogo;
-}
+
 
 int JogadorMorreu(tJogo jogo){
     int i=0;
@@ -376,7 +382,7 @@ int JogadorGanhou(tJogo jogo){
 }
 
 tJogo InicializaProximasVersoesArena(FILE * pSaida, tJogo jogo){
-jogo.iteracoes++;
+    jogo.iteracoes++;
     jogo = LimpaArena(jogo);
     jogo = MovePersonagens(jogo);
     jogo = MoveTirosJogador(jogo);
@@ -446,7 +452,7 @@ tJogo MovePersonagens(tJogo jogo){
 
     //direcao 2 siginifica que x vai decrementando, entao os aliens vao pra esquerda, posicao 1 significa que x vai incrementando 1 entao eles vao pra direita ata acalncar a parede
     if((jogo.iteracoes % 2) !=0){
-        jogo.coordenada.posicao_do_extremo_do_ultimo_alien = jogo.coordenada.X_aliens +jogo.num_aliens*largura_nave + (jogo.num_aliens-1);
+        jogo.coordenada.posicao_do_extremo_do_ultimo_alien = jogo.coordenada.X_aliens +jogo.num_aliens*largura_aliens + (jogo.num_aliens-1);
         if(jogo.coordenada.direcao_aliens==1){
             if(( jogo.coordenada.posicao_do_extremo_do_ultimo_alien) < (max_x-1)){
                 jogo.coordenada.X_aliens++;
@@ -545,6 +551,7 @@ return acertou;
 }
 
 int VerificaSeTiroVaiAtingirOutroTiro(tJogo jogo){
+    //vou averiguar a necessidade dessa funcao nos casos testes, acho que so precisa que na colisao o tiro amigo se sobressaia
     if(jogo.arena[jogo.coordenada.Y_tiro_jogador][jogo.coordenada.X_tiro_jogador] == jogo.personagem.tiro_inimigo){
         return 1;
     }
@@ -559,8 +566,8 @@ int VerificaSeTiroVaiAtingirOutroTiro(tJogo jogo){
 }
 
 tJogo RegistraQualInimigoFoiAtingido(tJogo jogo){   
-int i = 0, X_comeco_alien_i = 0, X_fim_aliens_i = 0;
-    int fileira = -1;
+    int i = 0, X_comeco_alien_i = 0, X_fim_aliens_i = 0;
+    int fileira = -1; //inicializando com -1 para saber quando nao entrar em nenhum if que diz qual a linha do morto
 
     if (jogo.coordenada.Y_tiro_jogador >= Y_primeira_fileira_inimigos && jogo.coordenada.Y_tiro_jogador <= (Y_primeira_fileira_inimigos + 1)) {
         fileira = 0;
@@ -617,7 +624,6 @@ tJogo EliminaInimigosMortos(tJogo jogo){
     return jogo;
 }
 //preciso consertar essa parte pra parar de sair tiro de uma nave que ja morreu
-//CONSERTAR
 tJogo MoveTirosInimigos(tJogo jogo){
     int acertou_nave_jogador=0;
     //MOVIMENTA OS TIROS inimigos
@@ -652,7 +658,7 @@ tJogo MoveTirosInimigos(tJogo jogo){
         jogo.coordenada.Y_tiro_inimigo_2++;
     }
     //CRIA OS TIROS INIMIGOS
-if (jogo.iteracoes % 3 == 0 && jogo.iteracoes % 2 != 0 && jogo.qtd_tiros < 3) {
+    if (jogo.iteracoes % 3 == 0 && jogo.iteracoes % 2 != 0 && jogo.qtd_tiros < 3) {
         if (jogo.tiro_inimigo_1_existe == 0) {
             jogo.tiro_inimigo_1_existe = 1;
             jogo = DizCoordenadaDoTiroInimigo(jogo); 
@@ -671,11 +677,11 @@ tJogo DizCoordenadaDoTiroInimigo(tJogo jogo){
         for(coluna=0; coluna<jogo.num_aliens; coluna++){
             if(jogo.inimigos[1][coluna] > 0){
                 Tem_nave_viva_na_fileira_mais_a_frente = 1;
-                jogo.coordenada.Y_tiro_inimigo_1 = Y_segunda_fileira_inimigos + altura_nave;
+                jogo.coordenada.Y_tiro_inimigo_1 = Y_segunda_fileira_inimigos + altura_aliens;
                 break;
             }else{
                 Tem_nave_viva_na_fileira_mais_a_frente = 0;
-                jogo.coordenada.Y_tiro_inimigo_1 = Y_primeira_fileira_inimigos + altura_nave;
+                jogo.coordenada.Y_tiro_inimigo_1 = Y_primeira_fileira_inimigos + altura_aliens;
             }
         }
         for(i=0; i<=jogo.num_aliens-1; i++){
@@ -700,11 +706,11 @@ tJogo DizCoordenadaDoTiroInimigo(tJogo jogo){
         for(coluna=0; coluna<jogo.num_aliens; coluna++){
             if(jogo.inimigos[1][coluna] >0){
                 Tem_nave_viva_na_fileira_mais_a_frente = 1;
-                jogo.coordenada.Y_tiro_inimigo_2 = Y_segunda_fileira_inimigos + altura_nave;
+                jogo.coordenada.Y_tiro_inimigo_2 = Y_segunda_fileira_inimigos + altura_aliens;
                 break;
             }else{
                 Tem_nave_viva_na_fileira_mais_a_frente = 0;
-                jogo.coordenada.Y_tiro_inimigo_2 = Y_primeira_fileira_inimigos + altura_nave;
+                jogo.coordenada.Y_tiro_inimigo_2 = Y_primeira_fileira_inimigos + altura_aliens;
             }
         }
         for(i=0; i<jogo.num_aliens; i++){
@@ -755,7 +761,7 @@ int main(int argc, char *argv[]){
     pSaida = fopen("saida/saida.txt", "w");
     pSaida_Mapa = fopen("saida/arquivo_saida.txt", "w");
 
-    ProcuraDiretorio(argc, argv);
+    ProcuraDiretorio(argc, argv, pSaida);
     jogo = LeArquivosEGeraPrimeiroMapa(argc, argv, jogo, pSaida);
 
     while(1){
