@@ -384,6 +384,7 @@ tJogo RealizaJogo(tJogo jogo, FILE * pSaida){
     }else{
         //Esse print novamente eh pra eu saber quando uma jogada diferente do comum foi lida
         //ajudou a consertar algumas coisas do buffer e quando o documento acabava e o jogo nao por erro meu caia aqui
+        printf("%c\n", jogo.jogada);
         printf("Digite uma jogada valida\n");
         fclose(pSaida);
         exit(0);
@@ -395,8 +396,10 @@ tJogo LeJogada(tJogo jogo){
     //Essa funcao le a jogada que vai vir da entrada padrao com ./ex . entrada.txt no terminal
     if(scanf("%c", &jogo.jogada) == 1){
         if(jogo.jogada == '\n'){ //esse if serve porque as vezes tava lendo errado principalmente quando a jogada era o space e o scanf ignorava dai eu coloquei essa verificacao pra ter certeza que leu e excluir os \n
-            if(scanf("%c", &jogo.jogada) != 1){
-                printf("acabaram as jogadas\n");
+            if(scanf("%c", &jogo.jogada) == 1){
+                if(jogo.jogada == '\n'){
+                    scanf("%c", &jogo.jogada);
+                }
             }
         }
     }else{
