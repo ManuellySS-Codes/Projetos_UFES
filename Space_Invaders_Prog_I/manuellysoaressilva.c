@@ -56,6 +56,7 @@ typedef struct{
     int TipoAlienFileira1;
     int TipoAlienFileira2;
     int jogador_morreu;
+    int fim_de_jogo;
     int num_aliens;
     int iteracoes;
     int qtd_tiros;
@@ -99,7 +100,7 @@ tJogo EliminaJogador(tJogo jogo);
 //FUNCOES DE IMPRESSAO
 void PrintaArenaEhPlacar(FILE* pSaida, tJogo jogo);
 //Falta Implementar ainda
-tJogo AtualizaMapaDeCalor(tJogo jogo);
+tJogo AtualizaMapaDeCalor(tJogo jogo, int X_tiro, int Y_tiro);
 void PrintaMapaDeCalor(FILE* pSaida, FILE* pSaida_Mapa, tJogo jogo);
 
 //Funcao a Funcao
@@ -135,20 +136,21 @@ tJogo LeArquivosEGeraPrimeiroMapa(int argc, char *argv[], tJogo jogo, FILE * pSa
 }
 
 tJogo InicializaPrimeiraVersaoDaArena(FILE * pPersonagens,FILE * pConfig, FILE * pSaida, tJogo jogo){
-    int linha=0, coluna=0;
+    int linha = 0, coluna = 0;
     //Aproveito que essa funcao so roda uma vez para inicializar os valores da struct jogo com os valores que tem que ter inicialmente e resolver o problema de terem lixo da memoria nelas
-    jogo.pontos=0;
-    jogo.iteracoes=0;
-    jogo.coordenada.X_nave= X_inicial_Nave;
-    jogo.coordenada.X_aliens= X_primeiro_alien;
-    jogo.coordenada.direcao_aliens =1;
-    jogo.jogador_morreu=0;
+    jogo.pontos = 0;
+    jogo.iteracoes = 0;
+    jogo.coordenada.X_nave = X_inicial_Nave;
+    jogo.coordenada.X_aliens = X_primeiro_alien;
+    jogo.coordenada.direcao_aliens = 1;
+    jogo.jogador_morreu = 0;
     jogo.tiro_jogador_existe = 0;
-    jogo.tiro_inimigo_1_existe=0;
-    jogo.tiro_inimigo_2_existe=0;
-    for(linha=0; linha<num_fileiras_alienigenas; linha++){
-        for(coluna=0; coluna<num_max_aliens; coluna++){ //considerei o num_max_aliens com base no que eu acho que cabe na arena, mas se ele aumentar eu preciso trocar
-            jogo.inimigos[linha][coluna]= QTD_Vidas_inimigas;
+    jogo.tiro_inimigo_1_existe = 0;
+    jogo.tiro_inimigo_2_existe = 0;
+    jogo.fim_de_jogo = 0;
+    for(linha = 0; linha < num_fileiras_alienigenas; linha++){
+        for(coluna = 0; coluna < num_max_aliens; coluna++){ //considerei o num_max_aliens com base no que eu acho que cabe na arena, mas se ele aumentar eu preciso trocar
+            jogo.inimigos[linha][coluna] = QTD_Vidas_inimigas;
         }
     }
     //As seguintes funcoes sao responsaveis por pegar informacoes dos arquivos, preencher e inicializar a primeira versao da arena
@@ -352,11 +354,13 @@ tJogo RealizaJogo(tJogo jogo, FILE * pSaida){
     if(ganhou == 1){
         fprintf(pSaida, "Parabens! Voce eliminou todas as naves alienigenas e venceu!\n");
         fclose(pSaida);
-        exit(0);
+        jogo.fim_de_jogo = 1;
+        return jogo;
     }else if(morreu == 1){
         fprintf(pSaida,"As naves alienigenas te eliminaram! Fim de jogo.\n");
         fclose(pSaida);
-        exit(0);
+        jogo.fim_de_jogo = 1;
+        return jogo;
     }
     //Depois se nenhum dos dois aconteceu se le a proxima jogada e continua o jogo
     jogo = LeJogada(jogo);
@@ -509,7 +513,7 @@ tJogo MovePersonagens(tJogo jogo){
 tJogo MoveTirosJogador(tJogo jogo){
     //Funca que move os tiros do jogador e faz varias verificacoes em relacao as consequencias dessa acao acho que eh a mais complexa do negocio
     //Essa funcao ta meio redundante se eu tiver tempo livre vou encurtar ela soh preciso tomar cuidado pra manter a mesma logica e nao dar erro desnecessario
-    int acertou_nave_inimiga = 0, i = 0, j = 0, acertou_tiro_inimigo = 0, X_tiro=0, Y_tiro=0;
+    int acertou_nave_inimiga = 0, i = 0, j = 0, acertou_tiro_inimigo = 0;
     if(jogo.jogada == ' '){
         if(jogo.tiro_jogador_existe == 0){ //se o tiro nao existe a funcao cria ele quando a jogada eh space
             jogo.tiro_jogador_existe = 1;
@@ -517,10 +521,12 @@ tJogo MoveTirosJogador(tJogo jogo){
             jogo.coordenada.Y_tiro_jogador = Y_inicial_Nave - 1;
             jogo.coordenada.X_tiro_jogador = jogo.coordenada.X_nave + 1;
             jogo.arena[jogo.coordenada.Y_tiro_jogador][jogo.coordenada.X_tiro_jogador] = jogo.personagem.tiro_jogador;
+            jogo = AtualizaMapaDeCalor(jogo, jogo.coordenada.X_tiro_jogador, jogo.coordenada.Y_tiro_jogador); //Atualizando mapa de calor com posicoes e movimentos dos tiros do jogador
         }else if(jogo.tiro_jogador_existe == 1){ //se a jogada eh space mas o tiro jah existe a funcao soh movimenta ele
             jogo.coordenada.Y_tiro_jogador--; //como o tiro jogador sobe a arena o y dele decrementa pra movimentar
             if(jogo.coordenada.Y_tiro_jogador > 0){ //tem que tomar cuidado com as bordas
                 acertou_nave_inimiga = VerificaSeTiroVaiAtingirUmInimigo(jogo); //Verifica se o tiro vai acertar um inimigo
+                jogo = AtualizaMapaDeCalor(jogo, jogo.coordenada.X_tiro_jogador, jogo.coordenada.Y_tiro_jogador);
                 if(acertou_nave_inimiga == 0){ //Se nao acertou uma nave inimiga e o proximo caracter eh um space ou um tiro do inimigo o tiro do jogador se sobrepoe
                     if(jogo.arena[jogo.coordenada.Y_tiro_jogador][jogo.coordenada.X_tiro_jogador] == ' ' || jogo.arena[jogo.coordenada.Y_tiro_jogador][jogo.coordenada.X_tiro_jogador] == jogo.personagem.tiro_inimigo){
                         jogo.arena[jogo.coordenada.Y_tiro_jogador][jogo.coordenada.X_tiro_jogador] = jogo.personagem.tiro_jogador;
@@ -529,14 +535,10 @@ tJogo MoveTirosJogador(tJogo jogo){
                     jogo = RegistraQualInimigoFoiAtingido(jogo); //registra na matriz inimigos a perda da vida o ganho dos pontos e os outros porens 
                     jogo.qtd_tiros--;
                     jogo.tiro_jogador_existe = 0;
-                    jogo.coordenada.Y_tiro_jogador = -1; //-1 eh um valor facil de mapear erro
-                    jogo.coordenada.X_tiro_jogador = -1;
                 }       
             }else{
                 jogo.qtd_tiros--;
                 jogo.tiro_jogador_existe = 0;
-                jogo.coordenada.Y_tiro_jogador = -1;
-                jogo.coordenada.X_tiro_jogador = -1;
             }
         }
     }else{ //Mesma logica de movimentar o tiro mas sem precisar que a jogada seja um space
@@ -544,6 +546,7 @@ tJogo MoveTirosJogador(tJogo jogo){
             jogo.coordenada.Y_tiro_jogador--;
             if(jogo.coordenada.Y_tiro_jogador > 0){
                 acertou_nave_inimiga = VerificaSeTiroVaiAtingirUmInimigo(jogo);
+                jogo = AtualizaMapaDeCalor(jogo, jogo.coordenada.X_tiro_jogador, jogo.coordenada.Y_tiro_jogador);
                 if(acertou_nave_inimiga == 0){
                     if(jogo.arena[jogo.coordenada.Y_tiro_jogador][jogo.coordenada.X_tiro_jogador] == ' ' || jogo.arena[jogo.coordenada.Y_tiro_jogador][jogo.coordenada.X_tiro_jogador] == jogo.personagem.tiro_inimigo){
                         jogo.arena[jogo.coordenada.Y_tiro_jogador][jogo.coordenada.X_tiro_jogador] = jogo.personagem.tiro_jogador;
@@ -552,22 +555,13 @@ tJogo MoveTirosJogador(tJogo jogo){
                     jogo = RegistraQualInimigoFoiAtingido(jogo);
                     jogo.qtd_tiros--;
                     jogo.tiro_jogador_existe = 0;
-                    jogo.coordenada.Y_tiro_jogador = -1;
-                    jogo.coordenada.X_tiro_jogador = -1;
                 }       
             }else{
                 jogo.qtd_tiros--;
                 jogo.tiro_jogador_existe = 0;
-                    jogo.coordenada.Y_tiro_jogador = -1;
-                    jogo.coordenada.X_tiro_jogador = -1;
             }
         }
     }
-    //preciso ver como eh esse mapa de calor pra saber ateh onde eh considerado que o tiro foi e onde eu coloco isso
-    //vou implementar primeiro aqui e depois da funcao dos tiros inimigos pra nao errar muito
-    X_tiro = jogo.coordenada.X_tiro_jogador;
-    Y_tiro = jogo.coordenada.Y_tiro_jogador;
-    //jogo = AtualizaMapaDeCalor(jogo, X_tiro, Y_tiro);
     return jogo;
 }
 
@@ -590,14 +584,6 @@ int VerificaSeTiroVaiAtingirUmInimigo(tJogo jogo){
         }
     }
     return acertou;
-}
-
-int VerificaSeTiroVaiAtingirOutroTiro(tJogo jogo){
-    //vou averiguar a necessidade dessa funcao nos casos testes, acho que so precisa que na colisao o tiro amigo se sobressaia
-    if(jogo.arena[jogo.coordenada.Y_tiro_jogador][jogo.coordenada.X_tiro_jogador] == jogo.personagem.tiro_inimigo){
-        return 1;
-    }
-    return 0;
 }
 
 tJogo RegistraQualInimigoFoiAtingido(tJogo jogo){   
@@ -667,12 +653,14 @@ tJogo MoveTirosInimigos(tJogo jogo){
     //Essa parte da funcao soh eh responsavel por mover os tiros em si
     //Separei em tiro 1 e tiro 2 para ter um controle melhor das posicoes dde cada um
     if(jogo.tiro_inimigo_1_existe == 1){
-        acertou_nave_jogador = VerificaSeTiroVaiAtingirNave(jogo);
         if(jogo.coordenada.Y_tiro_inimigo_1 < max_y-1){ //tomando cuidado primeiro pro tiro nao passar da arena
+            acertou_nave_jogador = VerificaSeTiroVaiAtingirNave(jogo);
+            jogo = AtualizaMapaDeCalor(jogo, jogo.coordenada.X_tiro_inimigo_1, jogo.coordenada.Y_tiro_inimigo_1); //Atualizando mapa de calor com posicoes e movimentos dos tiros inimigos
             if(acertou_nave_jogador == 0){
                 jogo.arena[jogo.coordenada.Y_tiro_inimigo_1][jogo.coordenada.X_tiro_inimigo_1] = jogo.personagem.tiro_inimigo;
             }else{
                 jogo.jogador_morreu = 1;
+                jogo = AtualizaMapaDeCalor(jogo, jogo.coordenada.X_tiro_inimigo_1, jogo.coordenada.Y_tiro_inimigo_1+1);
                 jogo = EliminaJogador(jogo);
             }
         }else{
@@ -684,10 +672,13 @@ tJogo MoveTirosInimigos(tJogo jogo){
     if(jogo.tiro_inimigo_2_existe == 1){
         if(jogo.coordenada.Y_tiro_inimigo_2 < max_y-1){
             acertou_nave_jogador = VerificaSeTiroVaiAtingirNave(jogo);
+            jogo = AtualizaMapaDeCalor(jogo, jogo.coordenada.X_tiro_inimigo_2, jogo.coordenada.Y_tiro_inimigo_2);
             if(acertou_nave_jogador == 0){
                 jogo.arena[jogo.coordenada.Y_tiro_inimigo_2][jogo.coordenada.X_tiro_inimigo_2] = jogo.personagem.tiro_inimigo;
             }else{
                 jogo.jogador_morreu = 1;
+                //jogo.arena[jogo.coordenada.Y_tiro_inimigo_1][jogo.coordenada.X_tiro_inimigo_1] = ' ';
+                jogo = AtualizaMapaDeCalor(jogo, jogo.coordenada.X_tiro_inimigo_2, jogo.coordenada.Y_tiro_inimigo_2+1);
                 jogo = EliminaJogador(jogo);
             }
         }else{
@@ -787,7 +778,7 @@ int VerificaSeTiroVaiAtingirNave(tJogo jogo){
     //Funcao que verifica se o tiro inimigo vai acertar o jogador
     if(jogo.coordenada.Y_tiro_inimigo_1+1 == Y_inicial_Nave && jogo.coordenada.X_tiro_inimigo_1 >= jogo.coordenada.X_nave && jogo.coordenada.X_tiro_inimigo_1 <= (jogo.coordenada.X_nave+2)){
         return 1;
-    }else if(jogo.coordenada.Y_tiro_inimigo_2 == Y_inicial_Nave && jogo.coordenada.X_tiro_inimigo_2 >= jogo.coordenada.X_nave && jogo.coordenada.X_tiro_inimigo_2 <= jogo.coordenada.X_nave+2){
+    }else if(jogo.coordenada.Y_tiro_inimigo_2+1 == Y_inicial_Nave && jogo.coordenada.X_tiro_inimigo_2 >= jogo.coordenada.X_nave && jogo.coordenada.X_tiro_inimigo_2 <= jogo.coordenada.X_nave+2){
         return 1;
     }else{
         return 0;
@@ -804,14 +795,14 @@ tJogo EliminaJogador(tJogo jogo){
     jogo.arena[Y_inicial_Nave + 1][jogo.coordenada.X_nave+2] = ' ';
     return jogo;
 }
-/*tJogo AtualizaMapaDeCalor(tJogo jogo, int X_tiro, int Y_tiro){
+tJogo AtualizaMapaDeCalor(tJogo jogo, int X_tiro, int Y_tiro){
     //Funcao que atualiza os dados do mapa de calor
-    jogo.MapaDeCalor[X_tiro][Y_tiro]++;
-    if(jogo.MapaDeCalor[X_tiro][Y_tiro] > 99){
-        jogo.MapaDeCalor[X_tiro][Y_tiro] = 99;
+    jogo.MapaDeCalor[Y_tiro][X_tiro]++;
+    if(jogo.MapaDeCalor[Y_tiro][X_tiro] > 99){
+        jogo.MapaDeCalor[Y_tiro][X_tiro] = 99;
     }
     return jogo;
-}*/
+}
 int main(int argc, char *argv[]){
     tJogo jogo;
     //Abrindo os arquivos de saida
@@ -825,6 +816,12 @@ int main(int argc, char *argv[]){
     //Loop que realiza o jogo ateh acontecer alguma coisa em realiza jogo que acaba a partida
     while(1){
         jogo = RealizaJogo(jogo, pSaida);
+        if(jogo.fim_de_jogo == 1){
+            break;
+        }
+    }
+    if(jogo.seletor_funcionalidade == 1){
+        PrintaMapaDeCalor(pSaida_Mapa, pSaida, jogo);
     }
     return 0;
 }
