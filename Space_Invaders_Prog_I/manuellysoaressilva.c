@@ -7,6 +7,8 @@
 #define max_y 13
 #define min_x 0
 #define min_y 0
+#define largura_mapa_de_calor 21
+#define altura_mapa_de_calor 11
 #define num_max_aliens 5
 #define num_fileiras_alienigenas 2
 #define Distancia_entre_aliens 4
@@ -18,11 +20,11 @@
 #define largura_nave 3
 #define altura_nave 2
 #define largura_aliens 3
-#define altura_aliens 3
+#define altura_aliens 2
 #define QTD_Vidas_inimigas 2
 
-//Complexos ou structs
-//Estao separados em tres porque um unico complexo ficaria desorganizado mas todos tem relacao com tJogo
+    //Complexos ou structs
+    //Estao separados em tres porque um unico complexo ficaria desorganizado mas todos tem relacao com tJogo
 typedef struct{
     int X_nave;
     int X_aliens;
@@ -47,7 +49,7 @@ typedef struct{
 typedef struct{
     char jogada;
     char arena[max_y][max_x];
-    char MapaDeCalor[max_y][max_x];
+    char MapaDeCalor[altura_mapa_de_calor][largura_mapa_de_calor];
     int inimigos[num_fileiras_alienigenas][num_max_aliens]; //2 ou 1 signigica aliens vivos e 0 aliens mortos
     int seletor_funcionalidade;
     int tiro_jogador_existe;
@@ -65,43 +67,48 @@ typedef struct{
     tPersonagens personagem;
 } tJogo;
 
-
 //FUNCOES 
-//FUNCOES BASICAS OU INICIAIS
-void ProcuraDiretorio(int argc, char *argv[], FILE * pSaida);
-tJogo LeArquivosEGeraPrimeiroMapa(int argc, char *argv[], tJogo jogo, FILE * pSaida);
-tJogo InicializaPrimeiraVersaoDaArena(FILE * pPersonagens,FILE * pConfig, FILE * pSaida, tJogo jogo);
-tJogo PegaInformacoesDasConfiguracoes(FILE * pConfig, tJogo jogo);
-tJogo PegaInformacoesDosPersonagens(FILE * pPersonagens, tJogo jogo);
-tJogo InicializaLimitesDaArena(FILE* pSaida, tJogo jogo);
-tJogo ColocaAliensNaArena( tJogo jogo);
-tJogo PreenchePrimeiraFileiraDeAliens(int tipo_alien, tJogo jogo);
-tJogo PreencheSegundaFileiraDeAliens(int tipo_alien, tJogo jogo);
-tJogo PreencheComNaveJogador(tJogo jogo);
-//FUNCOES DINAMICAS DO JOGO
-tJogo RealizaJogo(tJogo jogo, FILE * pSaida);
-tJogo LeJogada(tJogo jogo);
-tJogo InicializaProximasVersoesArena(FILE * pSaida, tJogo jogo);
-tJogo MovePersonagens(tJogo jogo);
-tJogo LimpaArenaERecolocaAsBordas(FILE * pSaida, tJogo jogo);
-//FUNCOES QUE TRATAM ESPECIFICAMENTE OS TIRO DO JOGADOR E AS CONSEQUENCIAS DE CADA UM
-tJogo MoveTirosJogador(tJogo jogo);
-int VerificaSeTiroVaiAtingirUmInimigo(tJogo jogo);
-int VerificaSeTiroVaiAtingirOutroTiro(tJogo jogo); //PRECISO VER NOS CASOS O QUE ACONTECE EXATAMENTE    
-tJogo RegistraQualInimigoFoiAtingido(tJogo jogo);
-tJogo EliminaInimigosMortos(tJogo jogo);
-int JogadorMorreu(tJogo jogo);
-int JogadorGanhou(tJogo jogo);
-//FUNCOES QUE TRATAM ESPECIFICAMENTE DOS TIROS INIMIGOS E AS CONSEQUENCIAS DE CADA UM
-tJogo MoveTirosInimigos(tJogo jogo);
-tJogo DizCoordenadaDoTiroInimigo(tJogo jogo);
-int VerificaSeTiroVaiAtingirNave(tJogo jogo);
-tJogo EliminaJogador(tJogo jogo);
-//FUNCOES DE IMPRESSAO
-void PrintaArenaEhPlacar(FILE* pSaida, tJogo jogo);
-//Falta Implementar ainda
-tJogo AtualizaMapaDeCalor(tJogo jogo, int X_tiro, int Y_tiro);
-void PrintaMapaDeCalor(FILE* pSaida, FILE* pSaida_Mapa, tJogo jogo);
+    //Funcoes base
+        //Arquivos e diretorios
+            void ProcuraDiretorio(int argc, char *argv[], FILE * pSaida);
+            tJogo LeArquivosEGeraPrimeiroMapa(int argc, char *argv[], tJogo jogo, FILE * pSaida);
+            tJogo PegaInformacoesDasConfiguracoes(FILE * pConfig, tJogo jogo);
+            tJogo PegaInformacoesDosPersonagens(FILE * pPersonagens, tJogo jogo);
+        //Criam a primeira arena
+            tJogo InicializaPrimeiraVersaoDaArena(FILE * pPersonagens,FILE * pConfig, FILE * pSaida, tJogo jogo);
+            tJogo InicializaLimitesDaArena(FILE* pSaida, tJogo jogo);
+            tJogo ColocaAliensNaArena( tJogo jogo);
+            tJogo PreenchePrimeiraFileiraDeAliens(int tipo_alien, tJogo jogo);
+            tJogo PreencheSegundaFileiraDeAliens(int tipo_alien, tJogo jogo);
+            tJogo PreencheComNaveJogador(tJogo jogo);
+            void PrintaArenaEhPlacar(FILE* pSaida, tJogo jogo);
+    //Funcoes de dinamica de jogo
+        //organizacao de fluxo de jogo
+            tJogo RealizaJogo(tJogo jogo, FILE * pSaida);
+            tJogo LeJogada(tJogo jogo);
+            tJogo LimpaArenaERecolocaAsBordas(FILE * pSaida, tJogo jogo);
+            tJogo InicializaProximasVersoesArena(FILE * pSaida, tJogo jogo);
+            int JogadorMorreu(tJogo jogo);
+            int JogadorGanhou(tJogo jogo);
+        //Tiros inimigos
+            tJogo MoveTirosInimigos(tJogo jogo);
+            tJogo DizCoordenadaDoTiroInimigo(tJogo jogo);
+            tJogo EliminaJogador(tJogo jogo);
+            int VerificaSeTiroVaiAtingirNave(tJogo jogo);
+        //Tiros amigos
+            tJogo MoveTirosJogador(tJogo jogo);
+            tJogo RegistraQualInimigoFoiAtingido(tJogo jogo);
+            tJogo EliminaInimigosMortos(tJogo jogo);
+            int VerificaSeTiroVaiAtingirUmInimigo(tJogo jogo);
+            int VerificaSeTiroVaiAtingirOutroTiro(tJogo jogo);   
+        //Movimentacao de personagens
+            tJogo MovePersonagens(tJogo jogo);
+    //Funcoes do mapa de calor
+        tJogo AtualizaMapaDeCalor(tJogo jogo, int X_tiro, int Y_tiro);
+        void PrintaMapaDeCalor(FILE* pSaida_Mapa, tJogo jogo);
+
+
+//
 
 //Funcao a Funcao
 void ProcuraDiretorio(int argc, char *argv[], FILE * pSaida){
@@ -148,11 +155,20 @@ tJogo InicializaPrimeiraVersaoDaArena(FILE * pPersonagens,FILE * pConfig, FILE *
     jogo.tiro_inimigo_1_existe = 0;
     jogo.tiro_inimigo_2_existe = 0;
     jogo.fim_de_jogo = 0;
+
+    //inicializando as matrizes de vidas dos inimigos e mapa de calor com os valores corretos
+    for(linha = 0; linha < altura_mapa_de_calor; linha++){
+        for(coluna = 0; coluna < largura_mapa_de_calor; coluna++){ 
+            jogo.MapaDeCalor[linha][coluna] = 0;
+        }
+    }
+
     for(linha = 0; linha < num_fileiras_alienigenas; linha++){
         for(coluna = 0; coluna < num_max_aliens; coluna++){ //considerei o num_max_aliens com base no que eu acho que cabe na arena, mas se ele aumentar eu preciso trocar
             jogo.inimigos[linha][coluna] = QTD_Vidas_inimigas;
         }
     }
+
     //As seguintes funcoes sao responsaveis por pegar informacoes dos arquivos, preencher e inicializar a primeira versao da arena
     jogo = PegaInformacoesDosPersonagens(pPersonagens, jogo);
     jogo = PegaInformacoesDasConfiguracoes(pConfig, jogo);
@@ -325,22 +341,21 @@ void PrintaArenaEhPlacar(FILE* pSaida, tJogo jogo){
     }
 }
 
-void PrintaMapaDeCalor(FILE* pSaida_Mapa, FILE* pSaida, tJogo jogo){
+void PrintaMapaDeCalor(FILE* pSaida_Mapa, tJogo jogo){
     //Essa funcao soh printa o mapa de calor se o seletor de config for 0 se nao for ela nao printa nada
     //De qualquer modo o mapa de calor sempre vai existir o que vai ser decidido eh se ele vai ser printado ou nao
     int linha = 0, coluna = 0;
     //Por enquanto ta assim porque o professor pediu pra implementar na sala
     if(jogo.seletor_funcionalidade == 0){
         fprintf(pSaida_Mapa, "Ainda a ser implementado!\n");
-    }
-    /*
-    for(linha = 0; linha < max_y; linha++){
-        for(coluna = 0; coluna < max_x; coluna++){
-            fprintf(pSaida, "%02d ", jogo.MapaDeCalor[linha][coluna]);
+    }else{
+        for(linha = 0; linha < altura_mapa_de_calor; linha++){
+            for(coluna = 0; coluna < largura_mapa_de_calor; coluna++){
+                fprintf(pSaida_Mapa, "%02d ", jogo.MapaDeCalor[linha][coluna]);
+            }
+            fprintf(pSaida_Mapa, "\n");
         }
-        fprintf(pSaida, "\n");
     }
-    */
 }
 
 tJogo RealizaJogo(tJogo jogo, FILE * pSaida){
@@ -353,12 +368,10 @@ tJogo RealizaJogo(tJogo jogo, FILE * pSaida){
     //Mesmo se ganhar e morrer acontecer na mesma rodada vai dar que o jogador ganhou
     if(ganhou == 1){
         fprintf(pSaida, "Parabens! Voce eliminou todas as naves alienigenas e venceu!\n");
-        fclose(pSaida);
         jogo.fim_de_jogo = 1;
         return jogo;
     }else if(morreu == 1){
         fprintf(pSaida,"As naves alienigenas te eliminaram! Fim de jogo.\n");
-        fclose(pSaida);
         jogo.fim_de_jogo = 1;
         return jogo;
     }
@@ -596,12 +609,14 @@ tJogo RegistraQualInimigoFoiAtingido(tJogo jogo){
     } else if (jogo.coordenada.Y_tiro_jogador >= Y_segunda_fileira_inimigos && jogo.coordenada.Y_tiro_jogador <= (Y_segunda_fileira_inimigos + 1)) {
         fileira = 1;
     }
+
     //Depois de saber a fileira onde o tiro esta eu posso verificar exatamente qual alien ele acertou
     if(fileira != -1){
         for(i = 0; i < jogo.num_aliens; i++){ // uso aqui a mesma logica de comeco e fim do corpinho de cada alien
             //com esse for eu sei o alien i que morreu e tambem uso o i pra atualizar a matriz
             X_comeco_alien_i = jogo.coordenada.X_aliens + (i * Distancia_entre_aliens);
             X_fim_aliens_i = X_comeco_alien_i + (largura_aliens - 1);
+
             if (jogo.coordenada.X_tiro_jogador >= X_comeco_alien_i && jogo.coordenada.X_tiro_jogador <= X_fim_aliens_i) {
                 jogo.inimigos[fileira][i]--; //diminui das vidas do alien que morreu
                 if(jogo.inimigos[fileira][i] <= QTD_Vidas_inimigas - 2){ //Se o alien ficou com 0 vidas ou menos ele morreu e da tres pontos pro jogador
@@ -660,7 +675,6 @@ tJogo MoveTirosInimigos(tJogo jogo){
                 jogo.arena[jogo.coordenada.Y_tiro_inimigo_1][jogo.coordenada.X_tiro_inimigo_1] = jogo.personagem.tiro_inimigo;
             }else{
                 jogo.jogador_morreu = 1;
-                jogo = AtualizaMapaDeCalor(jogo, jogo.coordenada.X_tiro_inimigo_1, jogo.coordenada.Y_tiro_inimigo_1+1);
                 jogo = EliminaJogador(jogo);
             }
         }else{
@@ -678,7 +692,6 @@ tJogo MoveTirosInimigos(tJogo jogo){
             }else{
                 jogo.jogador_morreu = 1;
                 //jogo.arena[jogo.coordenada.Y_tiro_inimigo_1][jogo.coordenada.X_tiro_inimigo_1] = ' ';
-                jogo = AtualizaMapaDeCalor(jogo, jogo.coordenada.X_tiro_inimigo_2, jogo.coordenada.Y_tiro_inimigo_2+1);
                 jogo = EliminaJogador(jogo);
             }
         }else{
@@ -732,9 +745,9 @@ tJogo DizCoordenadaDoTiroInimigo(tJogo jogo){
                 if(diferenca_horizontal_entre_naves_e_aliens <= menor){//salva a menor diferenca ou menor distancia horizontal entre alien e nave
                     menor = diferenca_horizontal_entre_naves_e_aliens;
                     if((jogo.iteracoes +1)% 2!=0){//Esse if eh pra quando a nave vai se movimentar na iteracao seguinte dai eu ajusto pro tiro nao ficar um X atradasado se esse for o caso
-                        jogo.coordenada.X_tiro_inimigo_1 = X_cabeca_de_cada_nave;
+                        jogo.coordenada.X_tiro_inimigo_1 = X_cabeca_de_cada_nave+1;
                     }else{
-                        jogo.coordenada.X_tiro_inimigo_1 = X_cabeca_de_cada_nave-1;
+                        jogo.coordenada.X_tiro_inimigo_1 = X_cabeca_de_cada_nave;
                     }            
                 }
             }
@@ -763,9 +776,9 @@ tJogo DizCoordenadaDoTiroInimigo(tJogo jogo){
                 if(diferenca_horizontal_entre_naves_e_aliens <= menor){
                     menor = diferenca_horizontal_entre_naves_e_aliens;
                     if((jogo.iteracoes +1)% 2!=0){
-                        jogo.coordenada.X_tiro_inimigo_2 = X_cabeca_de_cada_nave;
+                        jogo.coordenada.X_tiro_inimigo_2 = X_cabeca_de_cada_nave+1;
                     }else{
-                        jogo.coordenada.X_tiro_inimigo_2 = X_cabeca_de_cada_nave-1;
+                        jogo.coordenada.X_tiro_inimigo_2 = X_cabeca_de_cada_nave;
                     }            
                 }
             }
@@ -776,9 +789,9 @@ tJogo DizCoordenadaDoTiroInimigo(tJogo jogo){
 
 int VerificaSeTiroVaiAtingirNave(tJogo jogo){
     //Funcao que verifica se o tiro inimigo vai acertar o jogador
-    if(jogo.coordenada.Y_tiro_inimigo_1+1 == Y_inicial_Nave && jogo.coordenada.X_tiro_inimigo_1 >= jogo.coordenada.X_nave && jogo.coordenada.X_tiro_inimigo_1 <= (jogo.coordenada.X_nave+2)){
+    if(jogo.coordenada.Y_tiro_inimigo_1 == Y_inicial_Nave && jogo.coordenada.X_tiro_inimigo_1 >= jogo.coordenada.X_nave && jogo.coordenada.X_tiro_inimigo_1 <= (jogo.coordenada.X_nave+2)){
         return 1;
-    }else if(jogo.coordenada.Y_tiro_inimigo_2+1 == Y_inicial_Nave && jogo.coordenada.X_tiro_inimigo_2 >= jogo.coordenada.X_nave && jogo.coordenada.X_tiro_inimigo_2 <= jogo.coordenada.X_nave+2){
+    }else if(jogo.coordenada.Y_tiro_inimigo_2 == Y_inicial_Nave && jogo.coordenada.X_tiro_inimigo_2 >= jogo.coordenada.X_nave && jogo.coordenada.X_tiro_inimigo_2 <= jogo.coordenada.X_nave+2){
         return 1;
     }else{
         return 0;
@@ -795,14 +808,20 @@ tJogo EliminaJogador(tJogo jogo){
     jogo.arena[Y_inicial_Nave + 1][jogo.coordenada.X_nave+2] = ' ';
     return jogo;
 }
+
 tJogo AtualizaMapaDeCalor(tJogo jogo, int X_tiro, int Y_tiro){
     //Funcao que atualiza os dados do mapa de calor
-    jogo.MapaDeCalor[Y_tiro][X_tiro]++;
-    if(jogo.MapaDeCalor[Y_tiro][X_tiro] > 99){
-        jogo.MapaDeCalor[Y_tiro][X_tiro] = 99;
+    X_tiro--; //isso eh porque a posicao 00 aqui eh a 11 na arena e dai eu preciso converter a posicao dos tiros de lah pra cah
+    Y_tiro--;
+    if(X_tiro >= 0 && X_tiro < largura_mapa_de_calor && Y_tiro >= 0 && Y_tiro < altura_mapa_de_calor){ //tomando cuidado com os limites do mapa
+        jogo.MapaDeCalor[Y_tiro][X_tiro]++;
+        if(jogo.MapaDeCalor[Y_tiro][X_tiro] > 99){ //se passar de 99 fica fixo em 99
+            jogo.MapaDeCalor[Y_tiro][X_tiro] = 99;
+       }
     }
     return jogo;
 }
+
 int main(int argc, char *argv[]){
     tJogo jogo;
     //Abrindo os arquivos de saida
@@ -817,11 +836,11 @@ int main(int argc, char *argv[]){
     while(1){
         jogo = RealizaJogo(jogo, pSaida);
         if(jogo.fim_de_jogo == 1){
+            fclose(pSaida);
             break;
         }
     }
-    if(jogo.seletor_funcionalidade == 1){
-        PrintaMapaDeCalor(pSaida_Mapa, pSaida, jogo);
-    }
+    PrintaMapaDeCalor(pSaida_Mapa, jogo);
+    fclose(pSaida_Mapa);
     return 0;
 }
